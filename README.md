@@ -1,65 +1,78 @@
 <<<<<<< HEAD
+# TP3 : NestJS + GraphQL + MySQL – Gestion d’un annuaire d’étudiants
 
-## Services Web Utilisés
-Ce projet implémente un service web SOAP unique basé sur la définition du schéma XML (`currency-converter.xsd`).
+## Objectif
+Créer une API pour gérer un annuaire d’étudiants (ajouter, consulter, modifier, supprimer) en utilisant NestJS, GraphQL et MySQL.
 
-*   **Endpoint SOAP :** `/ws`
-*   **Fichier WSDL :** `/ws/currencyConverter.wsdl` (accessible lorsque l'application est en cours d'exécution)
+## Services Web et Technologies Utilisés en Détail
 
-Le service exposé est `ConvertCurrency`, qui prend en entrée un montant, une devise de départ et une devise cible, et retourne le montant converti.
+*   **NestJS**: Ce framework Node.js sert de fondation à l'application. Il suit les principes de l'architecture modulaire, permettant une organisation claire du code en modules, contrôleurs, services et dans ce cas, des résolveurs GraphQL.
+*   **GraphQL**: Utilisé comme alternative à l'API REST. Il permet de définir un schéma de données fort et offre aux clients la possibilité de demander exactement les champs nécessaires, évitant ainsi le sur-transfert de données. L'API expose un seul point d'accès (`/graphql`).
+*   **MySQL**: Le système de base de données relationnelle choisi pour persister les données des étudiants. Les informations (id, firstName, lastName, email, phone) sont stockées dans une table `student`.
+*   **TypeORM**: Un ORM (Object-Relational Mapper) qui facilite l'interaction avec la base de données MySQL. Il permet de mapper les classes TypeScript (`Student` entity) aux tables de la base de données et fournit des méthodes pour effectuer des opérations CRUD (Create, Read, Update, Delete) sans écrire de SQL brut.
+*   **@nestjs/graphql & @nestjs/apollo**: Ces paquets fournissent l'intégration officielle de GraphQL dans NestJS. `@nestjs/graphql` gère la couche GraphQL de base, tandis que `@nestjs/apollo` permet d'utiliser Apollo Server, un serveur GraphQL populaire, avec NestJS.
+*   **mysql2**: C'est le pilote Node.js spécifique qui permet à TypeORM de communiquer avec la base de données MySQL.
 
-## Prérequis
-Assurez-vous d'avoir les éléments suivants installés :
-*   Java Development Kit (JDK) version 17 ou supérieure
-*   Apache Maven
+## Étapes de Mise en Place et Modifications Effectuées en Détail
 
-## Comment Construire et Exécuter le Projet
+Les étapes suivantes ont été suivies pour mettre en place et exécuter ce projet, avec les modifications spécifiques apportées :
 
-1.  Naviguez vers le répertoire du projet `currency-converter-service` dans votre terminal.
-2.  Exécutez la commande Maven suivante pour générer les classes Java à partir du schéma XSD et construire le projet :
+1.  **Initialisation du projet NestJS** :
     ```bash
-    mvn clean install
+    nest new tp-graphql-student
+    cd tp-graphql-student
     ```
-3.  Exécutez l'application Spring Boot en utilisant la commande Maven :
+    *Aucune modification spécifique au code à cette étape, juste la création de la structure de base.*
+
+2.  **Installation des dépendances nécessaires** (GraphQL, Apollo, TypeORM, MySQL) :
     ```bash
-    mvn spring-boot:run
+    npm install @nestjs/graphql @nestjs/apollo graphql apollo-server-express @nestjs/typeorm typeorm mysql2
     ```
-    L'application démarrera généralement sur `http://localhost:8080`.
+    *Ajout des paquets qui fournissent les fonctionnalités de base pour GraphQL (@nestjs/graphql, graphql, apollo-server-express) et son intégration avec NestJS (@nestjs/apollo), ainsi que TypeORM (typeorm) et le pilote MySQL (mysql2) pour la gestion de la base de données.*
 
-## Comment Tester le Service SOAP
+3.  **Configuration de la base de données MySQL** :
+    *   Exécution de `CREATE DATABASE tp_graphql_db;` dans MySQL pour créer la base de données.
+    *   **Modification de `src/app.module.ts`** : Ajout de `TypeOrmModule.forRoot({...})` dans les `imports`. La configuration inclut le `type: 'mysql'`, les informations de connexion (`host`, `port`, `username`, `password`, `database`), et `entities: [__dirname + '/**/*.entity{.ts,.js}']` pour que TypeORM découvre automatiquement les fichiers d'entité. `synchronize: true` est activé pour générer automatiquement le schéma de base de données basé sur les entités en mode développement.
 
-Vous pouvez tester le service SOAP à l'aide d'outils comme SoapUI ou Postman.
+4.  **Configuration de GraphQL** :
+    *   **Modification de `src/app.module.ts`** : Ajout de `GraphQLModule.forRoot({...})` dans les `imports`. La configuration utilise `driver: ApolloDriver`, spécifie le chemin pour la génération automatique du schéma (`autoSchemaFile: join(process.cwd(), 'src/schema.gql')`), et active le `playground: true` pour une interface de test interactive.
 
-*   **URL du WSDL :** `http://localhost:8080/ws/currencyConverter.wsdl`
-*   **URL de l'Endpoint SOAP :** `http://localhost:8080/ws`
+5.  **Génération des éléments pour l'entité Étudiant** :
+    ```bash
+    nest g module student
+    nest g service student
+    nest g resolver student
+    ```
+    *Création de la structure de base pour le module `student`, incluant le dossier, le fichier module, le service et le resolver.*
 
-### Exemple de Requête SOAP
-```xml
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cur="http://example.com/currency">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <cur:ConvertCurrencyRequest>
-         <cur:fromCurrency>USD</cur:fromCurrency>
-         <cur:toCurrency>EUR</cur:toCurrency>
-         <cur:amount>100.00</cur:amount>
-      </cur:ConvertCurrencyRequest>
-   </soapenv:Body>
-</soapenv:Envelope>
-```
+6.  **Création de l’entité Étudiant** :
+    *   **Création et modification de `src/student/student.entity.ts`** : Définition de la classe `Student` avec les propriétés `id`, `firstName`, `lastName`, `email`, et `phone`. Utilisation des décorateurs TypeORM (`@Entity()`, `@PrimaryGeneratedColumn()`, `@Column()`, `@Column({nullable:true})`) pour le mapping ORM, et des décorateurs GraphQL (`@ObjectType()`, `@Field()`, `@Field(type => Int)`, `@Field({nullable:true})`) pour définir la structure des types GraphQL.
 
-### Exemple de Réponse SOAP
-```xml
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-   <soapenv:Body>
-      <ns2:ConvertCurrencyResponse xmlns:ns2="http://example.com/currency">
-         <ns2:convertedAmount>90.0</ns2:convertedAmount>
-      </ns2:ConvertCurrencyResponse>
-   </soapenv:Body>
-</soapenv:Envelope>
-```
+7.  **Configuration du module `StudentModule`** :
+    *   **Modification de `src/student/student.module.ts`** : Importation de `TypeOrmModule.forFeature([Student])` pour rendre le repository `Student` injectable. Déclaration de `StudentService` et `StudentResolver` dans le tableau `providers` pour qu'ils soient gérés par le système d'injection de dépendances de NestJS.
 
-Pour utiliser SoapUI ou Postman, importez le WSDL `http://localhost:8080/ws/currencyConverter.wsdl` pour générer automatiquement des requêtes de test. Configurez ensuite le corps de la requête avec l'exemple ci-dessus et envoyez-la à l'URL de l'endpoint. 
->>>>>>> 57ccdfe607bba4f08696014b07e1ceceb42c57ba
-=======
-# tp-graphql-student
+8.  **Service Étudiant** :
+    *   **Modification de `src/student/student.service.ts`** : Implémentation des méthodes `findAll`, `findOne`, `create`, `update`, et `remove` pour gérer la logique métier. Le `StudentService` utilise `@InjectRepository(Student)` pour injecter une instance du repository TypeORM pour l'entité `Student` et effectue les opérations de base de données via les méthodes de ce repository (`.find()`, `.findOne()`, `.save()`, `.update()`, `.delete()`).
+
+9.  **Resolver GraphQL** :
+    *   **Modification de `src/student/student.resolver.ts`** : Définition des points d'entrée GraphQL. Utilisation du décorateur `@Resolver(of => Student)` pour lier ce resolver à l'entité `Student`. Définition des requêtes (`@Query`) `students` (pour tous les étudiants) et `student` (pour un étudiant par ID) et des mutations (`@Mutation`) `createStudent`, `updateStudent`, et `removeStudent`. Ces méthodes appellent les fonctions correspondantes du `StudentService` injecté pour réaliser les opérations de données.
+
+## Pour Exécuter le Projet
+
+1.  Assurez-vous d'avoir MySQL installé et en cours d'exécution.
+2.  Créez une base de données MySQL nommée `tp_graphql_db` (si ce n'est pas déjà fait).
+3.  Assurez-vous que les informations de connexion à la base de données dans `src/app.module.ts` sont correctes (`username`, `password`, `host`, `port`, `database`).
+4.  Lancez l'application :
+    ```bash
+    npm run start:dev
+    ```
+5.  Le playground GraphQL sera accessible à l'adresse `http://localhost:3000/graphql` pour tester vos queries et mutations.
+
+Ce README détaillé fournit plus de contexte sur le rôle de chaque technologie et les modifications spécifiques apportées aux fichiers pour suivre les étapes du TP.
+
+
+
+
+
+
 >>>>>>> 65192bf76850166e9f2e12317a6792304870b533
