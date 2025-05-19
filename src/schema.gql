@@ -1,0 +1,22 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Student {
+  id: Int!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String
+}
+
+type Query {
+  students: [Student!]!
+  student(id: Int!): Student
+}
+
+type Mutation {
+  createStudent(firstName: String!, lastName: String!, email: String!, phone: String): Student!
+  updateStudent(id: Int!, firstName: String, lastName: String, email: String, phone: String): Student!
+  removeStudent(id: Int!): Boolean!
+}
