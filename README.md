@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TP3 : NestJS + GraphQL + MySQL – Gestion d’un annuaire d’étudiants
 
 ## Objectif
@@ -155,3 +156,6 @@ Vous pouvez tester le service SOAP à l'aide d'outils comme SoapUI ou Postman.
 
 Pour utiliser SoapUI ou Postman, importez le WSDL `http://localhost:8080/ws/currencyConverter.wsdl` pour générer automatiquement des requêtes de test. Configurez ensuite le corps de la requête avec l'exemple ci-dessus et envoyez-la à l'URL de l'endpoint. 
 >>>>>>> 57ccdfe607bba4f08696014b07e1ceceb42c57ba
+=======
+# tp-graphql-student
+>>>>>>> 65192bf76850166e9f2e12317a6792304870b533
